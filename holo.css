@@ -1,0 +1,339 @@
+/* SITE MATRIX 3D — studio additions: projects sidebar, hologram HUD, licensing */
+
+.viewport-bar-top { flex-wrap: wrap; gap: 8px; }
+.viewport-bar { z-index: 10; }
+
+/* ---------- left tabs ---------- */
+.left-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.left-tab {
+  flex: 1;
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: 9px;
+  padding: 8px 4px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.left-tab.active {
+  color: #fff;
+  border-color: var(--accent);
+  background: rgba(0, 212, 255, 0.13);
+}
+
+/* ---------- license / project chip ---------- */
+.license-badge {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  border-radius: 20px;
+  padding: 5px 12px;
+  white-space: nowrap;
+}
+
+.license-badge.demo {
+  background: rgba(245, 197, 66, 0.14);
+  border: 1px solid rgba(245, 197, 66, 0.6);
+  color: #f5c542;
+}
+
+.license-badge.pro {
+  background: rgba(0, 212, 255, 0.14);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+}
+
+#project-chip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  max-width: 260px;
+}
+
+#project-chip:hover { border-color: var(--accent); }
+
+#current-project-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+/* ---------- account card ---------- */
+.user-card {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 8px;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #06121a;
+  font-weight: 800;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.user-meta { min-width: 0; }
+.user-name { font-weight: 700; font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.user-email { font-size: 11.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.license-pill {
+  display: block;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  border-radius: 8px;
+  padding: 6px;
+  margin-bottom: 8px;
+}
+
+.license-pill.demo {
+  background: rgba(245, 197, 66, 0.12);
+  border: 1px solid rgba(245, 197, 66, 0.55);
+  color: #f5c542;
+}
+
+.license-pill.pro {
+  background: rgba(0, 212, 255, 0.12);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+}
+
+.account-actions { display: flex; flex-direction: column; gap: 6px; }
+
+/* ---------- project cards ---------- */
+#projects-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+  max-height: 46vh;
+  overflow-y: auto;
+}
+
+.project-card {
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.project-card:hover { border-color: var(--accent); }
+
+.project-card.current {
+  border-color: var(--accent);
+  background: rgba(0, 212, 255, 0.07);
+}
+
+.project-thumb {
+  width: 100%;
+  height: 86px;
+  object-fit: cover;
+  border-radius: 7px;
+  background: #0b0e13;
+  border: 1px solid var(--border);
+}
+
+.project-thumb.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+}
+
+.project-name { font-size: 13px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.project-sub { font-size: 11px; color: var(--muted); }
+
+.project-actions { display: flex; gap: 6px; align-items: center; }
+
+.mini-btn {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 7px;
+  font-size: 11.5px;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
+.mini-btn:hover { border-color: var(--accent); }
+
+.current-tag { font-size: 11px; color: var(--accent); font-weight: 700; }
+
+/* ---------- spin + explode controls ---------- */
+#btn-spin.active {
+  background: rgba(0, 212, 255, 0.2);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+#explode-control {
+  position: absolute;
+  left: 12px;
+  bottom: 46px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(5, 10, 18, 0.82);
+  border: 1px solid rgba(0, 212, 255, 0.5);
+  border-radius: 24px;
+  padding: 8px 16px;
+  font-size: 12px;
+  color: #c6d3e2;
+  box-shadow: 0 0 24px rgba(0, 212, 255, 0.2);
+}
+
+#explode-control input[type="range"] {
+  width: 150px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+#explode-val {
+  font-family: ui-monospace, Consolas, monospace;
+  color: var(--accent);
+  min-width: 42px;
+}
+
+/* ---------- holographic HUD ---------- */
+#holo-hud {
+  position: absolute;
+  right: 12px;
+  top: 62px;
+  z-index: 10;
+  width: 238px;
+  font-family: ui-monospace, "SF Mono", Consolas, monospace;
+  background: rgba(3, 10, 18, 0.85);
+  border: 1px solid rgba(0, 212, 255, 0.55);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 0 30px rgba(0, 212, 255, 0.22);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+#holo-hud::before, #holo-hud::after {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #8ff7ff;
+}
+
+#holo-hud::before { top: -2px; left: -2px; border-right: none; border-bottom: none; border-radius: 12px 0 0 0; }
+#holo-hud::after { bottom: -2px; right: -2px; border-left: none; border-top: none; border-radius: 0 0 12px 0; }
+
+.hud-scanbeam {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 40px;
+  top: -45px;
+  background: linear-gradient(180deg, transparent, rgba(0, 212, 255, 0.16), transparent);
+  animation: hud-beam 3s linear infinite;
+}
+
+@keyframes hud-beam { to { top: 110%; } }
+
+.hud-title {
+  color: #8ff7ff;
+  font-size: 11.5px;
+  letter-spacing: 1.5px;
+  margin-bottom: 9px;
+  text-shadow: 0 0 8px rgba(0, 212, 255, 0.8);
+}
+
+.hud-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 7px; }
+
+.hud-grid > div, .hud-row {
+  background: rgba(0, 212, 255, 0.06);
+  border: 1px solid rgba(0, 212, 255, 0.25);
+  border-radius: 7px;
+  padding: 5px 7px;
+}
+
+.hud-grid label, .hud-row label {
+  display: block;
+  font-size: 8.5px;
+  letter-spacing: 1px;
+  color: #5fd7ef;
+  margin-bottom: 1px;
+}
+
+.hud-grid span, .hud-row span { font-size: 11.5px; color: #eafcff; }
+
+.hud-row { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+.hud-row label { margin: 0; min-width: 26px; }
+.hud-row span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.hud-foot {
+  display: flex;
+  justify-content: space-between;
+  color: #d3bfff;
+  font-size: 10px;
+  letter-spacing: 1px;
+  margin-top: 4px;
+}
+
+/* ---------- scanlines overlay ---------- */
+#scanlines {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    180deg,
+    rgba(0, 229, 255, 0.05) 0px,
+    rgba(0, 229, 255, 0.05) 1px,
+    transparent 1px,
+    transparent 4px
+  );
+  animation: scan-flicker 4s ease-in-out infinite;
+}
+
+@keyframes scan-flicker {
+  0%, 100% { opacity: 1; }
+  48% { opacity: 1; }
+  50% { opacity: 0.72; }
+  52% { opacity: 1; }
+}
+
+/* ---------- responsive ---------- */
+@media (max-width: 820px) {
+  #holo-hud { width: 200px; top: auto; bottom: 46px; right: 8px; padding: 9px; }
+  .hud-grid span, .hud-row span { font-size: 10px; }
+  #explode-control { bottom: auto; top: 106px; left: 8px; }
+  #project-chip { max-width: 150px; }
+}

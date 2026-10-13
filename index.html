@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SITE MATRIX 3D — Design Buildings on a Living Blueprint</title>
+  <meta name="description" content="SITE MATRIX 3D: build houses and structures in 3D, then inspect them as a rotating hologram with live XYZ scan readouts. Free demo, full access ₦2,000/month." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A7%8A%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="landing.css?v=2" />
+  <link rel="stylesheet" href="pay.css?v=2" />
+</head>
+<body>
+  <!-- ================= NAV ================= -->
+  <nav id="nav">
+    <a class="nav-brand" href="#top">
+      <span class="logo"><svg viewBox="0 0 48 48" aria-hidden="true"><polygon points="6,16.5 24,27 24,44 6,33.5" fill="#00b8e6" stroke="rgba(234,252,255,.9)" stroke-width="1.4" stroke-linejoin="round"/><polygon points="42,16.5 24,27 24,44 42,33.5" fill="#7c5cff" stroke="rgba(234,252,255,.9)" stroke-width="1.4" stroke-linejoin="round"/><polygon points="24,6 42,16.5 24,27 6,16.5" fill="#8ff7ff" stroke="rgba(234,252,255,.9)" stroke-width="1.4" stroke-linejoin="round"/><line x1="24" y1="6" x2="24" y2="27" stroke="#0b3a52" stroke-width="1.4" opacity=".55"/><line x1="6" y1="16.5" x2="42" y2="16.5" stroke="#0b3a52" stroke-width="1.4" opacity=".55"/><circle cx="24" cy="16.5" r="2.4" fill="#0b1626" stroke="#eafcff" stroke-width="1"/></svg></span>
+      <span class="nav-title">SITE MATRIX <em>3D</em></span>
+    </a>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#holo">Holo Studio</a>
+      <a href="#how">How it works</a>
+      <a href="#pricing">Pricing</a>
+    </div>
+    <div class="nav-auth" id="nav-auth">
+      <button class="btn btn-ghost" id="nav-login">Log in</button>
+      <button class="btn btn-primary" id="nav-signup">Sign up free</button>
+    </div>
+    <div class="nav-auth hidden" id="nav-user">
+      <span class="nav-chip" id="nav-chip">👤</span>
+      <a class="btn btn-primary" href="app.html">Open Studio →</a>
+      <button class="btn btn-ghost" id="nav-logout">Logout</button>
+    </div>
+  </nav>
+
+  <!-- ================= HERO ================= -->
+  <header id="top" class="hero">
+    <canvas id="bg-canvas"></canvas>
+    <div class="hero-inner">
+      <div class="hero-copy">
+        <div class="eyebrow">◈ WORKS IN YOUR BROWSER • NO INSTALL</div>
+        <h1>Design buildings in 3D on a <span class="grad">living blueprint</span>.</h1>
+        <p class="lede">SITE MATRIX 3D turns your ideas into structures you can see, move and reshape — then inspects them as a <b>rotating hologram</b> with live <b>XYZ scan readouts</b>.</p>
+        <div class="cta-row">
+          <button class="btn btn-big btn-primary" id="hero-demo">🚀 Launch Free Demo</button>
+          <button class="btn btn-big btn-glow" id="hero-unlock">🔓 Subscribe — ₦2,000/month</button>
+        </div>
+        <div class="cta-note">Free demo • ₦2,000/month • Cancel anytime</div>
+        <div class="stats">
+          <div><b>15+</b><span>building blocks</span></div>
+          <div><b>3</b><span>hologram modes</span></div>
+          <div><b>XYZ</b><span>live scan readout</span></div>
+          <div><b>₦2k</b><span>once, unlimited projects</span></div>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="holo-stage">
+          <div class="holo-cube">
+            <div class="face f1"></div>
+            <div class="face f2"></div>
+            <div class="face f3"></div>
+            <div class="face f4"></div>
+            <div class="face f5"></div>
+            <div class="face f6"></div>
+          </div>
+          <div class="holo-ring"></div>
+          <div class="holo-base"></div>
+          <div class="chip c1">DIM·X 8.60 m</div>
+          <div class="chip c2">DIM·Y 5.00 m</div>
+          <div class="chip c3">DIM·Z 6.80 m</div>
+          <div class="chip c4">◈ VOLUMETRIC SCAN ⟳</div>
+        </div>
+      </div>
+    </div>
+    <div class="scroll-hint">▼ scroll</div>
+  </header>
+
+  <!-- ================= FEATURES ================= -->
+  <section id="features" class="section">
+    <div class="section-head">
+      <div class="eyebrow">◈ EVERYTHING YOU NEED</div>
+      <h2>A complete 3D building studio</h2>
+      <p>From first wall to final hologram — design, move, measure and present your structure.</p>
+    </div>
+    <div class="cards">
+      <div class="card"><div class="card-icon">🧱</div><h3>Building blocks &amp; elements</h3><p>Walls, floors, slabs, columns, gable / pyramid / flat roofs, doors, windows, stairs, fences, trees and scale figures — click to add, drag to place.</p></div>
+      <div class="card"><div class="card-icon">👻</div><h3>Holographic studio</h3><p>One click turns your build into a glowing hologram: <b>Solid wire</b>, <b>Exploded</b> or <b>Volumetric particle</b> mode.</p></div>
+      <div class="card"><div class="card-icon">📐</div><h3>Live XYZ scan readouts</h3><p>A holographic HUD streams your structure's X / Y / Z dimensions, center, bounds, volume and part count as you build.</p></div>
+      <div class="card"><div class="card-icon">⟳</div><h3>Auto-rotating turntable</h3><p>Holograms spin automatically on a glowing pedestal with a sweeping scan plane — perfect for presentations.</p></div>
+      <div class="card"><div class="card-icon">📁</div><h3>Project library</h3><p>Every project you create lives in your own sidebar library with thumbnails — open, duplicate, rename and delete anytime.</p></div>
+      <div class="card"><div class="card-icon">📤</div><h3>Save, export &amp; share</h3><p>Autosave never loses work. Export projects as JSON, import them anywhere, or download PNG screenshots of your design.</p></div>
+    </div>
+  </section>
+
+  <!-- ================= HOLO ================= -->
+  <section id="holo" class="section section-dark">
+    <div class="section-head">
+      <div class="eyebrow">◈ HOLOGRAPHIC STUDIO</div>
+      <h2>See your building as a hologram</h2>
+      <p>Switch render styles instantly. The hologram auto-rotates while the scanner reads every axis.</p>
+    </div>
+    <div class="holo-grid">
+      <div class="holo-modes">
+        <div class="holo-mode"><div class="hm-icon">🧊</div><div><h3>Solid wire</h3><p>Clean translucent hologram with glowing edges — ideal for reviewing the full form.</p></div></div>
+        <div class="holo-mode"><div class="hm-icon">💥</div><div><h3>Exploded</h3><p>Blast the structure apart along every axis with the Spread slider to inspect each part.</p></div></div>
+        <div class="holo-mode"><div class="hm-icon">✨</div><div><h3>Volumetric</h3><p>Thousands of light particles plus a sweeping scan plane — a true sci-fi site scan.</p></div></div>
+      </div>
+      <div class="hud-mock">
+        <div class="hud-mock-title">◈ STRUCT // LIVE SCAN</div>
+        <div class="hud-mock-grid">
+          <div><label>DIM·X</label><span>8.60 m</span></div>
+          <div><label>DIM·Y</label><span>5.00 m</span></div>
+          <div><label>DIM·Z</label><span>6.80 m</span></div>
+          <div><label>CENTER</label><span>(0.00, 2.50, 0.00)</span></div>
+          <div><label>VOLUME</label><span>292.40 m³</span></div>
+          <div><label>PARTS</label><span>24</span></div>
+        </div>
+        <div class="hud-mock-row"><label>MIN</label><span>(-4.30, 0.00, -3.40)</span></div>
+        <div class="hud-mock-row"><label>MAX</label><span>(4.30, 5.00, 3.40)</span></div>
+        <div class="hud-mock-foot"><span>HOLO·VOLUMETRIC</span><span>ROT·AUTO ⟳</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= HOW ================= -->
+  <section id="how" class="section">
+    <div class="section-head">
+      <div class="eyebrow">◈ GET STARTED IN MINUTES</div>
+      <h2>How it works</h2>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><h3>Create a free account — or launch the demo</h3><p>Sign up in seconds, or jump straight into demo mode with no account at all.</p></div>
+      <div class="step"><div class="step-num">2</div><h3>Build with blocks</h3><p>Drop walls, roofs, doors and windows onto the blueprint. Move, rotate and resize everything in 3D.</p></div>
+      <div class="step"><div class="step-num">3</div><h3>Subscribe for ₦2,000/month</h3><p>A ₦2,000/month subscription unlocks unlimited projects of your own, plus export and your full project library.</p></div>
+    </div>
+  </section>
+
+  <!-- ================= PRICING ================= -->
+  <section id="pricing" class="section section-dark">
+    <div class="section-head">
+      <div class="eyebrow">◈ SIMPLE PRICING</div>
+      <h2>Start free. Go PRO for ₦2,000/month.</h2>
+      <p>One payment. No subscription. Your projects stay yours.</p>
+    </div>
+    <div class="pricing">
+      <div class="price-card">
+        <h3>🛠 Demo</h3>
+        <div class="price">₦0</div>
+        <div class="per">free forever</div>
+        <ul>
+          <li>✓ 1 demo sandbox project</li>
+          <li>✓ All 15+ building blocks &amp; tools</li>
+          <li>✓ Holographic studio (all 3 modes)</li>
+          <li>✓ XYZ scan readouts + auto-rotation</li>
+          <li>✓ PNG screenshots</li>
+          <li class="no">✕ Create your own projects</li>
+          <li class="no">✕ Project library &amp; JSON export</li>
+        </ul>
+        <button class="btn btn-big btn-ghost btn-wide" id="pricing-demo">Launch Demo</button>
+      </div>
+      <div class="price-card featured">
+        <div class="ribbon">MOST POPULAR</div>
+        <h3>⚡ Full Access</h3>
+        <div class="price">₦2,000</div>
+        <div class="per">per month • cancel anytime</div>
+        <ul>
+          <li>✓ <b>Unlimited projects of your own</b></li>
+          <li>✓ Project library sidebar with thumbnails</li>
+          <li>✓ Export / Import project files (JSON)</li>
+          <li>✓ Everything in Demo, plus priority new features</li>
+          <li>✓ Save, autosave &amp; PNG screenshots</li>
+        </ul>
+        <button class="btn btn-big btn-glow btn-wide" id="pricing-unlock">🔓 Subscribe — ₦2,000/month</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FAQ ================= -->
+  <section id="faq" class="section">
+    <div class="section-head">
+      <div class="eyebrow">◈ QUESTIONS</div>
+      <h2>Frequently asked</h2>
+    </div>
+    <div class="faq">
+      <details open><summary>Do I need to install anything?</summary><p>No. SITE MATRIX 3D runs entirely in your browser — just open the Studio and start building.</p></details>
+      <details><summary>Is the demo really free?</summary><p>Yes. Demo mode gives you a full sandbox with every building tool and all 3 hologram modes. A ₦2,000/month subscription lets you create and keep unlimited projects of your own. Cancel anytime.</p></details>
+      <details><summary>How does the subscription work?</summary><p>Subscribe with your card through the secure in-app checkout — ₦2,000/month, cancel anytime. This demo build simulates the payment — no real charge is made — and renewals are manual here; the same flow connects to Paystack or Flutterwave for automatic live billing.</p></details>
+      <details><summary>What happens if my subscription expires?</summary><p>Your projects are kept safely, but creating new projects and exporting lock again until you renew. Renewing extends your access for another 30 days from the day you pay.</p></details>
+      <details><summary>Will I find my work when I come back?</summary><p>Yes. Your projects are saved in your browser under your account, with autosave while you work. Use Export to keep backup files.</p></details>
+    </div>
+  </section>
+
+  <!-- ================= FINAL CTA ================= -->
+  <section class="final-cta">
+    <h2>Ready to build your first structure? 🏗️</h2>
+    <p>Launch the free demo now — upgrade only when you're ready to keep unlimited projects.</p>
+    <div class="cta-row center">
+      <button class="btn btn-big btn-primary" id="final-demo">🚀 Launch Free Demo</button>
+      <button class="btn btn-big btn-glow" id="final-unlock">🔓 Subscribe — ₦2,000/month</button>
+    </div>
+  </section>
+
+  <footer>
+    <div class="foot-brand"><span class="logo"><svg viewBox="0 0 48 48" aria-hidden="true"><polygon points="6,16.5 24,27 24,44 6,33.5" fill="#00b8e6" stroke="rgba(234,252,255,.9)" stroke-width="1.4" stroke-linejoin="round"/><polygon points="42,16.5 24,27 24,44 42,33.5" fill="#7c5cff" stroke="rgba(234,252,255,.9)" stroke-width="1.4" stroke-linejoin="round"/><polygon points="24,6 42,16.5 24,27 6,16.5" fill="#8ff7ff" stroke="rgba(234,252,255,.9)" stroke-width="1.4" stroke-linejoin="round"/><line x1="24" y1="6" x2="24" y2="27" stroke="#0b3a52" stroke-width="1.4" opacity=".55"/><line x1="6" y1="16.5" x2="42" y2="16.5" stroke="#0b3a52" stroke-width="1.4" opacity=".55"/><circle cx="24" cy="16.5" r="2.4" fill="#0b1626" stroke="#eafcff" stroke-width="1"/></svg></span> SITE MATRIX <em>3D</em></div>
+    <div class="foot-links"><a href="#features">Features</a><a href="#pricing">Pricing</a><a href="app.html">Studio</a></div>
+    <div class="foot-note">© 2026 SITE MATRIX 3D • Demo build — checkout is simulated, no real payments are processed.</div>
+  </footer>
+
+  <!-- ================= AUTH MODAL ================= -->
+  <div id="auth-modal" class="hidden">
+    <div class="auth-card">
+      <button class="auth-close" id="auth-close">✕</button>
+      <div class="auth-tabs">
+        <button class="auth-tab" data-authtab="login">Log in</button>
+        <button class="auth-tab active" data-authtab="signup">Sign up</button>
+      </div>
+
+      <form id="form-login" class="auth-form hidden" novalidate>
+        <h3>Welcome back 👋</h3>
+        <label>Email<input type="email" id="login-email" placeholder="you@example.com" autocomplete="email" /></label>
+        <label>Password<input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password" /></label>
+        <div class="auth-error hidden" id="login-error"></div>
+        <button type="submit" class="btn btn-big btn-primary btn-wide" id="login-btn">Log in →</button>
+      </form>
+
+      <form id="form-signup" class="auth-form" novalidate>
+        <h3>Create your free account 🎉</h3>
+        <label>Full name<input type="text" id="signup-name" placeholder="Ada Lovelace" autocomplete="name" /></label>
+        <label>Email<input type="email" id="signup-email" placeholder="you@example.com" autocomplete="email" /></label>
+        <label>Password (min. 6 characters)<input type="password" id="signup-pass" placeholder="••••••••" autocomplete="new-password" /></label>
+        <div class="auth-error hidden" id="signup-error"></div>
+        <button type="submit" class="btn btn-big btn-primary btn-wide" id="signup-btn">Create free account →</button>
+      </form>
+
+      <div class="auth-foot">
+        <span>Just looking around?</span>
+        <button class="link-btn" id="auth-guest">Continue as guest (demo) →</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="landing.js?v=2"></script>
+</body>
+</html>

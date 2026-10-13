@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SITE MATRIX 3D Studio — Build Anything in 3D</title>
+  <meta name="description" content="SITE MATRIX 3D Studio: design houses and 3D structures on a living blueprint, then inspect them as a rotating hologram." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A7%8A%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="styles.css?v=2" />
+  <link rel="stylesheet" href="holo.css?v=2" />
+  <link rel="stylesheet" href="pay.css?v=2" />
+  <link rel="stylesheet" href="layout.css?v=2" />
+  <link rel="stylesheet" href="ai.css?v=2" />
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+<script>
+/* Apply saved dock state before first paint (avoids open/close flash). */
+try {
+  var _d = JSON.parse(localStorage.getItem('sitematrix3d.docks') || '{}');
+  var _small = window.matchMedia('(max-width: 900px)').matches;
+  if (_d.left !== undefined ? _d.left : _small) document.body.classList.add('dock-left-collapsed');
+  if (_d.right !== undefined ? _d.right : _small) document.body.classList.add('dock-right-collapsed');
+} catch (e) {
+  if (window.matchMedia('(max-width: 900px)').matches) {
+    document.body.className += ' dock-left-collapsed dock-right-collapsed';
+  }
+}
+</script>
+  <div id="app">
+    <!-- ============ SLIM TOP BAR ============ -->
+    <header id="topbar">
+      <div class="tb-left">
+        <button id="btn-menu" title="Menu — all actions">☰</button>
+        <div class="brand">
+          <div class="logo"><svg viewBox="0 0 48 48" aria-hidden="true"><polygon points="6,16.5 24,27 24,44 6,33.5" fill="#00b8e6" stroke="rgba(234,252,255,.9)" stroke-width="1.4" stroke-linejoin="round"/><polygon points="42,16.5 24,27 24,44 42,33.5" fill="#7c5cff" stroke="rgba(234,252,255,.9)" stroke-width="1.4" stroke-linejoin="round"/><polygon points="24,6 42,16.5 24,27 6,16.5" fill="#8ff7ff" stroke="rgba(234,252,255,.9)" stroke-width="1.4" stroke-linejoin="round"/><line x1="24" y1="6" x2="24" y2="27" stroke="#0b3a52" stroke-width="1.4" opacity=".55"/><line x1="6" y1="16.5" x2="42" y2="16.5" stroke="#0b3a52" stroke-width="1.4" opacity=".55"/><circle cx="24" cy="16.5" r="2.4" fill="#0b1626" stroke="#eafcff" stroke-width="1"/></svg></div>
+          <div class="brand-text">
+            <h1>SITE MATRIX <span>3D</span></h1>
+            <p>Build houses &amp; structures on a living blueprint</p>
+          </div>
+        </div>
+      </div>
+      <div class="tb-right">
+        <span id="license-badge" class="license-badge demo">DEMO MODE</span>
+        <button class="btn" id="btn-save" title="Save this project (Ctrl+S)">💾 <span class="tb-label">Save</span></button>
+        <button class="btn btn-accent" id="btn-activate" title="Subscribe ₦2,000/month for unlimited projects">🔓 <span class="tb-label">Subscribe ₦2,000/mo</span></button>
+      </div>
+    </header>
+
+    <!-- ============ HAMBURGER MENU ============ -->
+    <nav id="app-menu" class="hidden" aria-label="Studio menu">
+      <button id="project-chip" class="menu-project" title="Open your project library">
+        <span class="menu-project-icon">📁</span>
+        <span class="menu-project-text"><span id="current-project-name">…</span><small>Open project library</small></span>
+      </button>
+      <div class="menu-section">
+        <div class="menu-label">Navigate</div>
+        <a class="menu-item menu-link" href="index.html" title="Back to the SITE MATRIX 3D landing page">🏠 Home <span class="menu-hint">landing page</span></a>
+      </div>
+      <div class="menu-section">
+        <div class="menu-label">Project</div>
+        <button class="menu-item" id="btn-load">📁 Projects library</button>
+        <button class="menu-item" id="btn-menu-new-project">➕ New Project</button>
+        <button class="menu-item" id="btn-import">📥 Import JSON</button>
+        <button class="menu-item" id="btn-export">📤 Export 🔒</button>
+        <button class="menu-item" id="btn-png">📷 Screenshot PNG</button>
+      </div>
+      <div class="menu-section">
+        <div class="menu-label">Edit</div>
+        <button class="menu-item" id="btn-undo">↶ Undo</button>
+        <button class="menu-item" id="btn-redo">↷ Redo</button>
+        <button class="menu-item" id="btn-new">🧹 Clear project</button>
+        <button class="menu-item" id="btn-demo">🏠 Demo House</button>
+      </div>
+      <div class="menu-section">
+        <div class="menu-label">Help</div>
+        <button class="menu-item" id="btn-help">❓ Help &amp; shortcuts</button>
+      </div>
+      <div class="menu-section">
+        <div class="menu-label">Account</div>
+        <button class="menu-item" id="btn-menu-logout">⏻ Log out / Exit</button>
+      </div>
+    </nav>
+
+    <!-- ============ MAIN (fullscreen canvas + floating docks) ============ -->
+    <div id="main">
+      <!-- 3D VIEWPORT -->
+      <div id="viewport-wrap">
+        <div id="viewport"></div>
+
+        <div id="alt-duplicate-hint" class="hidden">⧉ Alt held — drag any gizmo to duplicate</div>
+        <div id="command-dock">
+          <div id="dock-grip" title="Drag sideways to move this taskbar • Double-click to re-center"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+          <div class="seg-group" id="view-group">
+            <button class="seg-btn active" data-view="3d" title="Perspective view">3D</button>
+            <button class="seg-btn" data-view="top" title="Top (plan) view">Top</button>
+            <button class="seg-btn" data-view="front" title="Front elevation">Front</button>
+            <button class="seg-btn" data-view="side" title="Side elevation">Side</button>
+          </div>
+          <span class="dock-sep"></span>
+          <div class="seg-group" id="style-group">
+            <button class="seg-btn active" data-style="real" title="Normal render">🧊 Real</button>
+            <button class="seg-btn" data-style="solid" title="Hologram: solid wire + auto-rotation">👻 Holo</button>
+            <button class="seg-btn" data-style="exploded" title="Hologram: exploded view + auto-rotation">💥 Exploded</button>
+            <button class="seg-btn" data-style="volumetric" title="Hologram: volumetric particles + auto-rotation">✨ Volumetric</button>
+          </div>
+          <span class="dock-sep"></span>
+          <div class="seg-group" id="mode-group">
+            <button class="seg-btn active" data-mode="blueprint" title="Classic blueprint look">📐 Blueprint</button>
+            <button class="seg-btn" data-mode="realistic" title="Bright realistic look">☀️ Realistic</button>
+            <button class="seg-btn" data-mode="dark" title="Dark studio look">🌙 Dark</button>
+          </div>
+          <span class="dock-sep"></span>
+          <div class="seg-group" id="spin-group">
+            <button class="seg-btn" id="btn-spin" title="Toggle auto-rotation turntable">⟳ Spin</button>
+          </div>
+        </div>
+
+        <div id="explode-control" class="hidden">
+          <span>💥 Spread</span>
+          <input type="range" id="explode-range" min="0" max="3" step="0.1" value="1.2" />
+          <span id="explode-val">1.2m</span>
+        </div>
+
+        <div id="holo-hud" class="hidden">
+          <div class="hud-scanbeam"></div>
+          <div class="hud-title">◈ STRUCT // LIVE SCAN</div>
+          <div class="hud-grid">
+            <div><label>DIM·X</label><span id="hud-dimx">–</span></div>
+            <div><label>DIM·Y</label><span id="hud-dimy">–</span></div>
+            <div><label>DIM·Z</label><span id="hud-dimz">–</span></div>
+            <div><label>CENTER</label><span id="hud-center">–</span></div>
+            <div><label>VOLUME</label><span id="hud-vol">–</span></div>
+            <div><label>PARTS</label><span id="hud-parts">–</span></div>
+          </div>
+          <div class="hud-row"><label>MIN</label><span id="hud-min">–</span></div>
+          <div class="hud-row"><label>MAX</label><span id="hud-max">–</span></div>
+          <div class="hud-row"><label>SEL</label><span id="hud-sel">–</span></div>
+          <div class="hud-foot"><span id="hud-mode">HOLO·SOLID</span><span id="hud-rot">ROT·AUTO</span></div>
+        </div>
+        <div id="scanlines" class="hidden"></div>
+
+        <div class="viewport-bar viewport-bar-bottom">
+          <span>🖱 Left-drag: orbit &nbsp;•&nbsp; Right-drag: pan &nbsp;•&nbsp; Scroll: zoom &nbsp;•&nbsp; Click: select &nbsp;•&nbsp; Double-click: focus</span>
+        </div>
+
+        <div id="empty-state" class="hidden">
+          <div class="empty-card">
+            <div class="empty-icon">🏗️</div>
+            <h3>Your site is empty</h3>
+            <p>Start building your structure — add a block from the library, load the demo house and remodel it, or start on a plain blueprint.</p>
+            <div class="empty-actions">
+              <button class="btn btn-accent" id="empty-add-wall">🧱 Add a Wall</button>
+              <button class="btn" id="empty-demo">🏠 Load Demo House</button>
+              <button class="btn" id="empty-plain" title="Dismiss and work on the empty blueprint grid">📐 Start on Plain Blueprint</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LEFT FLOATING DOCK: Build / Projects -->
+      <aside id="left-panel" class="dock">
+        <div class="dock-head">
+          <div class="left-tabs">
+            <button class="left-tab active" data-lefttab="build">🧱 Build</button>
+            <button class="left-tab" data-lefttab="projects">📁 Projects</button>
+          </div>
+          <button class="dock-collapse-btn" id="dock-collapse-left" title="Hide panel">◀</button>
+        </div>
+        <div class="dock-body">
+          <div id="tab-build">
+            <section class="panel-section">
+              <h2>🛠 Tools</h2>
+              <div class="tool-grid">
+                <button class="tool-btn active" data-tool="select" title="Select objects (V)">◉<span>Select</span></button>
+                <button class="tool-btn" data-tool="translate" title="Move objects (G or W)">✥<span>Move</span></button>
+                <button class="tool-btn" data-tool="rotate" title="Rotate objects (R or E)">⟳<span>Rotate</span></button>
+                <button class="tool-btn" data-tool="scale" title="Resize objects (S)">⤢<span>Scale</span></button>
+              </div>
+            </section>
+
+            <section class="panel-section">
+              <h2>🧲 Snap &amp; Grid</h2>
+              <label class="check-row">
+                <input type="checkbox" id="snap-enabled" checked />
+                <span>Snap to grid</span>
+              </label>
+              <label class="field-row">
+                <span>Step</span>
+                <select id="snap-size">
+                  <option value="0.1">0.1 m</option>
+                  <option value="0.25">0.25 m</option>
+                  <option value="0.5" selected>0.5 m</option>
+                  <option value="1">1.0 m</option>
+                </select>
+              </label>
+              <label class="check-row">
+                <input type="checkbox" id="grid-visible" checked />
+                <span>Show blueprint grid</span>
+              </label>
+            </section>
+
+            <section class="panel-section">
+              <h2>🧱 Building Blocks</h2>
+              <p class="hint">Click a block to add it, then drag it around.</p>
+              <div class="library-grid" id="library">
+                <button class="lib-btn" data-type="wall"><span class="lib-icon">🧱</span><span>Wall</span></button>
+                <button class="lib-btn" data-type="wallLong"><span class="lib-icon">🧱</span><span>Long Wall</span></button>
+                <button class="lib-btn" data-type="floor"><span class="lib-icon">🟫</span><span>Floor</span></button>
+                <button class="lib-btn" data-type="floorLarge"><span class="lib-icon">🟫</span><span>Big Slab</span></button>
+                <button class="lib-btn" data-type="cube"><span class="lib-icon">📦</span><span>Cube</span></button>
+                <button class="lib-btn" data-type="column"><span class="lib-icon">🏛️</span><span>Column</span></button>
+                <button class="lib-btn" data-type="roofGable"><span class="lib-icon">🔺</span><span>Gable Roof</span></button>
+                <button class="lib-btn" data-type="roofPyramid"><span class="lib-icon">🔻</span><span>Pyramid Roof</span></button>
+                <button class="lib-btn" data-type="roofFlat"><span class="lib-icon">⬜</span><span>Flat Roof</span></button>
+                <button class="lib-btn" data-type="door"><span class="lib-icon">🚪</span><span>Door</span></button>
+                <button class="lib-btn" data-type="window"><span class="lib-icon">🪟</span><span>Window</span></button>
+                <button class="lib-btn" data-type="stairs"><span class="lib-icon">🪜</span><span>Stairs</span></button>
+                <button class="lib-btn" data-type="fence"><span class="lib-icon">🚧</span><span>Fence</span></button>
+                <button class="lib-btn" data-type="tree"><span class="lib-icon">🌳</span><span>Tree</span></button>
+                <button class="lib-btn" data-type="human"><span class="lib-icon">🧍</span><span>Person</span></button>
+              </div>
+              <div class="cbx-wrap">
+                <h3>📐 Custom Size Block</h3>
+                <div class="cbx-grid">
+                  <label class="cbx-field">Length (X)<input type="number" id="cbx-len" value="4" min="0" step="any" /></label>
+                  <label class="cbx-field">Height (Y)<input type="number" id="cbx-hei" value="2.6" min="0" step="any" /></label>
+                  <label class="cbx-field">Width (Z)<input type="number" id="cbx-wid" value="0.2" min="0" step="any" /></label>
+                </div>
+                <label class="cbx-row">Unit
+                  <select id="cbx-unit">
+                    <option value="m" selected>Metres (m)</option>
+                    <option value="cm">Centimetres (cm)</option>
+                    <option value="mm">Millimetres (mm)</option>
+                  </select>
+                </label>
+                <button class="cbx-add" id="cbx-add">➕ Add Custom Block</button>
+                <div class="cbx-readout" id="cbx-readout">≈ 4 × 2.6 × 0.2 m</div>
+              </div>
+            </section>
+          </div>
+
+          <div id="tab-projects" class="hidden">
+            <section class="panel-section">
+              <h2>👤 Account</h2>
+              <div class="user-card">
+                <div class="avatar" id="user-avatar">G</div>
+                <div class="user-meta">
+                  <div class="user-name" id="user-name">Guest</div>
+                  <div class="user-email" id="user-email">Demo mode</div>
+                </div>
+              </div>
+              <span class="license-pill demo" id="license-badge-2">DEMO MODE — 1 PROJECT</span>
+              <div class="account-actions">
+                <button class="btn btn-accent btn-small" id="btn-activate-2">🔓 Subscribe — ₦2,000/mo</button>
+                <button class="btn btn-small" id="btn-logout">Logout</button>
+              </div>
+            </section>
+
+            <section class="panel-section">
+              <h2>📁 My Projects</h2>
+              <label class="field-col">
+                <span class="field-label">Current project name</span>
+                <input type="text" id="project-name" maxlength="50" />
+              </label>
+              <button class="btn btn-accent btn-wide" id="btn-new-project">＋ New Project 🔒</button>
+              <div id="projects-list"></div>
+            </section>
+          </div>
+        </div>
+      </aside>
+
+      <!-- RIGHT FLOATING DOCK: Inspector -->
+      <aside id="right-panel" class="dock">
+        <div class="dock-head">
+          <span class="dock-title">🎛 Inspector</span>
+          <button class="dock-collapse-btn" id="dock-collapse-right" title="Hide panel">▶</button>
+        </div>
+        <div class="dock-body">
+          <section class="panel-section">
+            <h2>🎛 Properties</h2>
+            <div id="props-empty">
+              <p>Nothing selected.<br />Click any object in the scene to edit it here.</p>
+            </div>
+            <div id="props-form" class="hidden">
+              <label class="field-col">
+                <span class="field-label">Name</span>
+                <input type="text" id="prop-name" maxlength="40" />
+              </label>
+              <div class="type-row">
+                <span class="type-badge" id="prop-type">Wall</span>
+                <span class="dims" id="prop-dims">–</span>
+              </div>
+
+              <div class="field-label">Position (m)</div>
+              <div class="num-grid">
+                <label>X<input type="number" id="pos-x" step="0.1" /></label>
+                <label>Y<input type="number" id="pos-y" step="0.1" /></label>
+                <label>Z<input type="number" id="pos-z" step="0.1" /></label>
+              </div>
+
+              <div class="field-label">Rotation (°)</div>
+              <div class="num-grid">
+                <label>X<input type="number" id="rot-x" step="5" /></label>
+                <label>Y<input type="number" id="rot-y" step="5" /></label>
+                <label>Z<input type="number" id="rot-z" step="5" /></label>
+              </div>
+
+            <div class="rot-card">
+              <div class="rot-head">
+                <span class="field-label" style="margin:0">🔄 Turntable dial</span>
+                <div class="rot-axis" id="rot-axis">
+                  <button class="rot-axis-btn" data-axis="x" title="Rotate around X axis">X</button>
+                  <button class="rot-axis-btn active" data-axis="y" title="Rotate around Y axis">Y</button>
+                  <button class="rot-axis-btn" data-axis="z" title="Rotate around Z axis">Z</button>
+                </div>
+              </div>
+              <div class="rot-main">
+                <div class="rot-dial" id="rot-dial" title="Drag in a circle to rotate precisely">
+                  <div class="rot-needle" id="rot-needle"></div>
+                  <div class="rot-center" id="rot-deg">0°</div>
+                </div>
+                <div class="rot-side">
+                  <input type="range" id="rot-slider" min="0" max="360" step="1" value="0" title="Rotation angle slider (0–360°)" />
+                  <div class="rot-presets">
+                    <button data-deg="0">0°</button>
+                    <button data-deg="45">45°</button>
+                    <button data-deg="90">90°</button>
+                    <button data-deg="180">180°</button>
+                    <button data-deg="270">270°</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+              <div class="field-label">Size / Scale</div>
+              <div class="num-grid">
+                <label>X<input type="number" id="scl-x" step="0.1" min="0.05" /></label>
+                <label>Y<input type="number" id="scl-y" step="0.1" min="0.05" /></label>
+                <label>Z<input type="number" id="scl-z" step="0.1" min="0.05" /></label>
+              </div>
+
+              <div class="field-label">Color</div>
+              <div class="color-row">
+                <input type="color" id="prop-color" value="#f0ebe0" />
+                <div class="swatches" id="swatches"></div>
+              </div>
+
+              <div class="toggle-row">
+                <label class="check-row"><input type="checkbox" id="prop-visible" checked /><span>Visible</span></label>
+                <label class="check-row"><input type="checkbox" id="prop-locked" /><span>🔒 Locked</span></label>
+              </div>
+
+              <div class="props-actions">
+                <button class="btn btn-small" id="btn-duplicate" title="Duplicate (Ctrl+D)">⧉ Duplicate</button>
+                <button class="btn btn-small" id="btn-focus" title="Focus camera on object (F)">🎯 Focus</button>
+                <button class="btn btn-small" id="btn-rot45" title="Rotate 45° to the right">↻ +45°</button>
+                <button class="btn btn-small" id="btn-ground" title="Drop object so it sits on the ground">⬇ Ground</button>
+                <button class="btn btn-small" id="btn-utton>
+                <button class="btn btn-small" id="btn-ground" title="Drop object so it sits on the ground">⬇ Ground</button>
+                <button class="btn btn-small" id="btn-reset-rot" title="Straighten rotation">🧭 Straighten</button>
+                <button class="btn btn-small btn-danger" id="btn-delete" title="Delete (Del)">🗑 Delete</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel-section">
+            <h2>📋 Scene Objects <span class="count-pill" id="scene-count">0</span></h2>
+            <div id="outliner-list"></div>
+            <button class="btn btn-small btn-danger btn-wide" id="btn-clear-all">🧹 Clear entire scene</button>
+          </section>
+        </div>
+      </aside>
+
+      <!-- Edge tabs to reopen collapsed docks -->
+      <button id="dock-expand-left" class="dock-expand-tab" title="Show build panel">▶</button>
+      <button id="dock-expand-right" class="dock-expand-tab" title="Show inspector">◀</button>
+    </div>
+
+    <!-- ============ STATUS BAR ============ -->
+    <footer id="statusbar">
+      <span id="status-left">Ready</span>
+      <span id="status-right"></span>
+    </footer>
+  </div>
+
+  <!-- ============ HELP MODAL ============ -->
+  <div id="help-modal" class="hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2>Welcome to SITE MATRIX 3D 🏗️</h2>
+        <button class="btn" id="help-close">✕ Close</button>
+      </div>
+      <div class="modal-body">
+        <h3>🖥️ New layout</h3>
+        <ul>
+          <li>The <b>☰ menu</b> (top-left) holds everything: your current project, <b>🏠 Home</b> (landing page), Project, Edit, Account and Help.</li>
+          <li><b>Build / Projects</b> (left) and <b>Inspector</b> (right) are floating docks — collapse them with <b>◀ ▶</b> for a fullscreen canvas, reopen with the edge tabs.</li>
+          <li>The <b>command dock</b> at the bottom holds Views, Render style, Theme and Spin — swipe it sideways on small screens.</li>
+        </ul>
+        <h3>🚀 Build in 3 easy steps</h3>
+        <ol>
+          <li><b>Add blocks</b> — click any block in the left dock library (walls, floors, roofs, doors, windows…).</li>
+          <li><b>Move them</b> — click an object to select it, then drag the colored arrows. Switch to <b>Rotate</b> / <b>Scale</b> tools to turn and resize.</li>
+          <li><b>Fine-tune</b> — edit exact position, rotation, size and color in the right Inspector dock.</li>
+        </ol>
+        <h3>👻 Holographic Studio</h3>
+        <ul>
+          <li><b>🧊 Real</b> — normal render. <b>👻 Holo</b> — solid wire hologram. <b>💥 Exploded</b> — parts blast apart (drag the <b>Spread</b> slider). <b>✨ Volumetric</b> — particle scan with a sweeping plane.</li>
+          <li>Holograms <b>auto-rotate</b> on a glowing pedestal — toggle with <b>⟳ Spin</b>.</li>
+          <li>The <b>holographic HUD</b> streams live <b>X / Y / Z dimensions</b>, center, bounds, volume and part count.</li>
+        </ul>
+        <h3>📁 Projects &amp; activation</h3>
+        <ul>
+          <li><b>Demo mode</b> gives you 1 sandbox project with every tool. <b>Subscribe for ₦2,000/month</b> to create unlimited projects of your own, with a thumbnail library and JSON export. Your subscription stays active for 30 days and can be renewed anytime.</li>
+          <li>Use the <b>📁 Projects</b> tab (left dock) to switch, rename, duplicate and delete projects.</li>
+        </ul>
+        <h3>🖱 Camera controls</h3>
+        <ul>
+          <li><b>Left-drag</b> orbit &nbsp;•&nbsp; <b>Right-drag</b> pan &nbsp;•&nbsp; <b>Scroll</b> zoom</li>
+          <li><b>Click</b> an object to select &nbsp;•&nbsp; <b>Double-click</b> to focus &nbsp;•&nbsp; <b>Click empty space</b> to deselect</li>
+          <li>Use the <b>Top / Front / Side</b> buttons in the command dock for blueprint-style views.</li>
+        </ul>
+        <h3>🔄 Precise rotation &amp; movable taskbar</h3>
+        <ul>
+          <li>In <b>Select</b> mode, every selected block gets a glowing <b>turntable ring</b> on the ground — drag it left/right to spin the block live (snaps to 15° when Snap is on).</li>
+          <li><b>⧉ Duplicate fast:</b> hold <b>Alt</b> and drag any gizmo to drag out a copy, or <b>right-click</b> any block for Duplicate / Focus / Rotate / Delete.</li>
+          <li><b>📐 Custom sizes:</b> type any Length × Height × Width in the Building Blocks panel, pick <b>m / cm / mm</b>, then hit <b>Add Custom Block</b>.</li>
+          <li><b>🤖 Matrix Assistant:</b> click the 💬 button (bottom-right) to chat with the built-in AI — sizes, unit converter, how-tos, subscription help, and it can even <b>build entire rooms from your instructions</b>. It only answers building questions.</li>
+          <li>Select any block, then use the <b>🔄 Turntable dial</b> in the Inspector to rotate it to an exact degree — drag the dial in a circle, use the slider, tap presets (0° / 45° / 90° / 180° / 270°), or switch the <b>X / Y / Z</b> axis. The block turns smoothly and live in the workspace.</li>
+          <li>Drag the <b>⋮⋮ grip</b> on the bottom taskbar to slide it sideways; <b>double-click</b> the grip to re-center it. Its position is remembered.</li>
+        </ul>
+        <h3>⌨️ Keyboard shortcuts</h3>
+        <table class="keys">
+          <tr><td><kbd>V</kbd> <kbd>G</kbd> <kbd>R</kbd> <kbd>S</kbd></td><td>Select / Move / Rotate / Scale tools</td></tr>
+          <tr><td><kbd>Q</kbd> / <kbd>E</kbd></td><td>Quick-rotate selected block (15° steps)</td></tr>
+          <tr><td><kbd>Alt</kbd> + drag gizmo</td><td>Duplicate: drag out a live copy</td></tr>
+          <tr><td>Right-click</td><td>Quick menu: duplicate, focus, rotate, delete</td></tr>
+          <tr><td><kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> <kbd>PgUp</kbd><kbd>PgDn</kbd></td><td>Nudge selected object</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>D</kbd></td><td>Duplicate selected</td></tr>
+          <tr><td><kbd>F</kbd></td><td>Focus camera on selected</td></tr>
+          <tr><td><kbd>Del</kbd></td><td>Delete selected</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Ctrl</kbd>+<kbd>Y</kbd></td><td>Undo / Redo</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>S</kbd></td><td>Save project</td></tr>
+          <tr><td><kbd>Esc</kbd></td><td>Close menu / deselect / close this help</td></tr>
+        </table>
+        <h3>💡 Tips</h3>
+        <ul>
+          <li>Turn on <b>Snap to grid</b> so walls line up perfectly.</li>
+          <li>Mount <b>doors &amp; windows</b> on walls by moving them against the wall surface.</li>
+          <li>Your work <b>auto-saves</b> into the current project. Use <b>Export</b> for a backup file, and <b>PNG</b> to share a picture of your design.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div id="ctx-menu" class="hidden">
+    <button id="ctx-duplicate">⧉ Duplicate</button>
+    <button id="ctx-focus">🎯 Focus</button>
+    <button id="ctx-rot45">↻ Rotate +45°</button>
+    <button id="ctx-delete" class="danger">🗑 Delete</button>
+  </div>
+
+ent project. Use <b>Export</b> for a backup file, and <b>PNG</b> to share a picture of your design.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+  <input type="file" id="file-import" accept=".json,application/json" class="hidden" />
+
+  <script type="module" src="app.js?v=2"></script>
+  <script type="module" src="ai.js?v=2"></script>
+  <script src="layout.js?v=2"></script>
+</body>
+</html>
