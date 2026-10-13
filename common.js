@@ -296,13 +296,40 @@ async function getPaystackCfg() {
 
 // Dynamically load Paystack's inline popup JS (paystack.js). Safe to call multiple times.
 function loadPaystackJs() {
-  if (window.PaystackPop) return Promise.resolve(window.PaystackPop);
+  if (window.PaystackPop && typeof window.PaystackPop.setup === 'function') {
+    return Promise.resolve(window.PaystackPop);
+  }
+  // Remove any prior failed/half-loaded script tag to avoid state issues
+  const prior = document.querySelector('script[data-paystack="1"]');
+  if (prior) prior.remove();
   return new Promise((resolve, reject) => {
     const s = document.createElement('script');
     s.src = 'https://js.paystack.co/v1/inline.js';
     s.async = true;
-    s.onload = () => resolve(window.PaystackPop);
-    s.onerror = () => reject(new Error('Paystack script failed to load'));
+    s.setAttribute('data-paystack', '1');
+    let settled = false;
+    s.onload = () => {
+      // give Paystack a tick to attach PaystackPop to window
+      const tryResolve = (tries) => {
+        if (window.PaystackPop && typeof window.PaystackPop.setup === 'function') {
+          if (!settled) { settled = true; resolve(window.PaystackPop); }
+          return;
+        }
+        if (tries <= 0) {
+          if (!settled) { settled = true; reject(new Error('PaystackPop not found after load')); }
+          return;
+        }
+        setTimeout(() => tryResolve(tries - 1), 50);
+      };
+      tryResolve(20);
+    };
+    s.onerror = () => {
+      if (!settled) { settled = true; reject(new Error('Paystack script failed to load')); }
+    };
+    // timeout after 15s
+    setTimeout(() => {
+      if (!settled) { settled = true; reject(new Error('Paystack load timed out')); }
+    }, 15000);
     document.head.appendChild(s);
   });
 }
@@ -491,20 +518,13 @@ export async function openPayModal(opts = {}) {
       btn.textContent = 'Opening Paystack…';
       try {
         const PaystackPop = await loadPaystackJs();
-        const handler = PaystackPop.setup({
-          key: cfg.publicKey,
-          email,
-          amount: PRICE_NGN * 100, // kobo
-          currency: 'NGN',
-          ref: 'SM3D-' + Date.now().toString(36).toUpperCase() +
-               '-' + Math.floor(100000 + Math.random() * 900000),
-          metadata: {
-            custom_fields: [
-              { display_name: 'Plan', variable_name: 'plan', value: 'SITE MATRIX 3D Full Access Monthly' },
-              { display_name: 'App', variable_name: 'app', value: 'SITE MATRIX 3D' },
-            ],
-          },
-          callback: async (resp) => {
+        if (!PaystackPop || typeof PaystackPop.setup !== 'function') {
+          throw new Error('Paystack failed to load');
+        }
+
+        const onSuccess = function (resp) {
+          // plain (non-async) function to satisfy Paystack's typeof check
+          (async () => {
             try {
               btn.textContent = 'Verifying payment…';
               const data = await verifyPaystackRef(resp.reference);
@@ -516,16 +536,42 @@ export async function openPayModal(opts = {}) {
               btn.textContent = '🔒 Pay securely with Paystack — ' + SUB_LABEL;
               showError('Payment could not be verified: ' + (vErr.message || 'try again'));
             }
+          })();
+        };
+
+        const onCancel = function () {
+          processing = false;
+          btn.disabled = false;
+          btn.classList.remove('processing');
+          btn.textContent = '🔒 Pay securely with Paystack — ' + SUB_LABEL;
+        };
+
+        const ref = 'SM3D-' + Date.now().toString(36).toUpperCase() +
+                    '-' + Math.floor(100000 + Math.random() * 900000);
+
+        const handler = PaystackPop.setup({
+          key: String(cfg.publicKey),
+          email: String(email),
+          amount: Number(PRICE_NGN) * 100,
+          currency: 'NGN',
+          ref: ref,
+          metadata: {
+            custom_fields: [
+              { display_name: 'Plan', variable_name: 'plan', value: 'SITE MATRIX 3D Full Access Monthly' },
+              { display_name: 'App', variable_name: 'app', value: 'SITE MATRIX 3D' },
+            ],
           },
-          onClose: () => {
-            processing = false;
-            btn.disabled = false;
-            btn.classList.remove('processing');
-            btn.textContent = '🔒 Pay securely with Paystack — ' + SUB_LABEL;
-          },
+          callback: onSuccess,
+          onClose: onCancel,
         });
-        handler.openIframe();
-        // Re-enable the button a moment after popup opens so users can try again if they close it
+
+        if (handler && typeof handler.openIframe === 'function') {
+          handler.openIframe();
+        } else {
+          // fallback: some Paystack builds open automatically from setup()
+        }
+
+        // Re-enable after popup opens so users can retry if they close it
         setTimeout(() => {
           if (processing) {
             btn.disabled = false;
