@@ -2,15 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <style>
+    /* Ensure app fills the visible viewport on mobile (avoids bottom bar hidden under browser chrome) */
+    :root { --app-height: 100vh; --safe-bottom: env(safe-area-inset-bottom, 0px); }
+    @supports (height: 100dvh) { :root { --app-height: 100dvh; } }
+    @supports (height: 100svh) { :root { --app-height: 100svh; } }
+  </style>
   <title>SITE MATRIX 3D Studio — Build Anything in 3D</title>
   <meta name="description" content="SITE MATRIX 3D Studio: design houses and 3D structures on a living blueprint, then inspect them as a rotating hologram." />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A7%8A%3C/text%3E%3C/svg%3E" />
-  <link rel="stylesheet" href="styles.css?v=2" />
-  <link rel="stylesheet" href="holo.css?v=2" />
-  <link rel="stylesheet" href="pay.css?v=2" />
-  <link rel="stylesheet" href="layout.css?v=2" />
-  <link rel="stylesheet" href="ai.css?v=2" />
+  <link rel="stylesheet" href="styles.css?v=3" />
+  <link rel="stylesheet" href="holo.css?v=3" />
+  <link rel="stylesheet" href="pay.css?v=3" />
+  <link rel="stylesheet" href="layout.css?v=3" />
+  <link rel="stylesheet" href="ai.css?v=3" />
   <script type="importmap">
     {
       "imports": {
@@ -477,8 +483,8 @@ ent project. Use <b>Export</b> for a backup file, and <b>PNG</b> to share a pict
   <div id="toast-container"></div>
   <input type="file" id="file-import" accept=".json,application/json" class="hidden" />
 
-  <script type="module" src="app.js?v=2"></script>
-  <script type="module" src="ai.js?v=2"></script>
-  <script src="layout.js?v=2"></script>
+  <script type="module" src="app.js?v=3"></script>
+  <script type="module" src="ai.js?v=3"></script>
+  <script src="layout.js?v=3"></script>
 </body>
 </html>

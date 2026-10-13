@@ -30,7 +30,10 @@ body {
 #app {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: var(--app-height, 100vh);
+  /* leave room for iOS home indicator / Android nav bar */
+  padding-bottom: var(--safe-bottom);
+  box-sizing: border-box;
 }
 
 #main {
@@ -636,7 +639,7 @@ kbd {
 /* ---------- toast ---------- */
 #toast-container {
   position: fixed;
-  bottom: 46px;
+  bottom: calc(46px + var(--safe-bottom, 0px));
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -681,7 +684,7 @@ kbd {
 
 @media (max-width: 820px) {
   body { overflow: auto; }
-  #app { height: auto; min-height: 100vh; }
+  #app { height: auto; min-height: var(--app-height, 100vh); padding-bottom: var(--safe-bottom); }
   #main { flex-direction: column; }
   #viewport-wrap { height: 58vh; order: 1; }
   #left-panel { width: auto; order: 2; border-right: none; border-bottom: 1px solid var(--border); }

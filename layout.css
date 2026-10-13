@@ -305,7 +305,7 @@ body.dock-right-collapsed #dock-expand-right { display: flex; }
 /* ---------- responsive ---------- */
 @media (max-width: 900px) {
   body { overflow: hidden; }
-  #app { height: 100vh; }
+  #app { height: var(--app-height, 100vh); padding-bottom: var(--safe-bottom); }
   #main { flex-direction: row; }
 
   #viewport-wrap {
@@ -317,19 +317,23 @@ body.dock-right-collapsed #dock-expand-right { display: flex; }
 
   #left-panel, #right-panel {
     top: 8px;
-    bottom: 8px;
+    bottom: calc(8px + var(--safe-bottom, 0px));
     width: min(320px, 88vw);
   }
   #left-panel { left: 8px; }
   #right-panel { right: 8px; }
 
-  #statusbar { position: static; }
+  #statusbar { position: static; flex-shrink: 0; }
   .library-grid { grid-template-columns: 1fr 1fr; }
 
-  #command-dock { bottom: 8px; gap: 6px; padding: 6px 8px; }
-  #command-dock .seg-btn { padding: 5px 8px; font-size: 11.5px; white-space: nowrap; }
+  #command-dock {
+    bottom: calc(8px + var(--safe-bottom, 0px));
+    gap: 6px;
+    padding: 8px 10px;
+  }
+  #command-dock .seg-btn { padding: 6px 9px; font-size: 12px; white-space: nowrap; }
 
-  #holo-hud { top: auto; bottom: 68px; right: 8px; width: 205px; padding: 9px; }
+  #holo-hud { top: auto; bottom: calc(68px + var(--safe-bottom, 0px)); right: 8px; width: 205px; padding: 9px; }
   #explode-control { top: 8px; bottom: auto; left: 8px; }
 
   .brand-text p { display: none; }

@@ -3,7 +3,7 @@
 #ai-fab {
   position: fixed;
   right: 16px;
-  bottom: 56px;
+  bottom: calc(56px + var(--safe-bottom, 0px));
   width: 52px;
   height: 52px;
   border-radius: 50%;
@@ -27,9 +27,9 @@
 #ai-panel {
   position: fixed;
   right: 16px;
-  bottom: 118px;
+  bottom: calc(118px + var(--safe-bottom, 0px));
   width: min(350px, calc(100vw - 32px));
-  height: min(520px, calc(100vh - 170px));
+  height: min(520px, calc(var(--app-height, 100vh) - 170px));
   min-height: 320px;
   display: flex;
   flex-direction: column;
