@@ -3,7 +3,7 @@
 import {
   signup, login, logout, getSession, getCurrentUser, ensureGuestSession,
   openPayModal, PRICE_NGN, fmtNGN, isOwner
-} from './common.js?v=5';
+} from './common.js?v=6';
 
 const $ = (id) => document.getElementById(id);
 

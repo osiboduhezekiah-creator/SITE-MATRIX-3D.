@@ -11,7 +11,7 @@ import {
   getSession, getCurrentUser, getOwner, isActivated, logout,
   getProjects, saveProjects, createProject, touchProject, deleteProject,
   getCurrentProjectId, setCurrentProjectId, openPayModal, fmtDate, isOwner, getSubscription
-} from './common.js?v=5';
+} from './common.js?v=6';
 
 // ---- session guard: must enter via landing (login/signup) or demo mode ----
 {

@@ -22,7 +22,11 @@ function fmtSubDate(ts) {
      checkout ("Have an owner code?"). Keep it secret; change it to
      something only you know. */
 export const ADMIN_EMAILS = [
-  'owner@sitematrix3d.com' // <-- REPLACE with your own email address
+  'osiboduhezekiah@gmail.com',       // site owner (you)
+  'hezekiaholaoluwa0708@gmail.com',  // admin
+  'thinkglobal1000@gmail.com',       // admin
+  'ayomidelove286@gmail.com',        // admin
+  'danielonakoya19@gmail.com',       // admin
 ];
 export const OWNER_CODE = 'MATRIX-OWNER-2026'; // <-- change to your own secret code
 
