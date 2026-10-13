@@ -225,10 +225,19 @@ class Handler(SimpleHTTPRequestHandler):
         self.wfile.write(raw)
 
     def do_GET(self):
-        if self.path.split('?', 1)[0] == '/api/health':
+        _p = self.path.split('?', 1)[0]
+        if _p == '/api/health':
             if not rate_ok(self.client_address[0]):
                 return self._json({'ok': False, 'error': 'rate limited'}, 429)
             return self._json({'ok': True, 'cloud': groq_available(), 'model': GROQ_MODEL})
+        if _p == '/api/config':
+            # Send ONLY the Paystack PUBLIC key to the browser; secret key stays server-side.
+            pub = os.environ.get('PAYSTACK_PUBLIC_KEY', '').strip()
+            sec = os.environ.get('PAYSTACK_SECRET_KEY', '').strip()
+            return self._json({
+                'ok': True,
+                'paystack': {'publicKey': pub, 'enabled': bool(pub) and bool(sec)},
+            })
         if self._deny_hidden():
             return
         super().do_GET()
@@ -237,6 +246,8 @@ class Handler(SimpleHTTPRequestHandler):
         _p = self.path.split('?', 1)[0]
         if _p == '/api/build':
             return self._handle_build()
+        if _p == '/api/paystack/verify':
+            return self._handle_paystack_verify()
         if _p != '/api/chat':
             return self.send_error(404)
         if not rate_ok(self.client_address[0]):
@@ -282,6 +293,67 @@ class Handler(SimpleHTTPRequestHandler):
             return self._json({'ok': False, 'error': 'ai unavailable'}, 502)
         return self._json({'ok': True, 'reply': reply})
 
+
+    def _handle_paystack_verify(self):
+        """Verify a Paystack transaction server-side so users can't fake activation.
+
+        Expects JSON body { reference: "<paystack payment reference>" }.
+        Calls https://api.paystack.co/transaction/verify/<reference> with the
+        secret key. Returns { ok, data: { reference, amount, email } } on success.
+        """
+        if not rate_ok(self.client_address[0]):
+            return self._json({'ok': False, 'error': 'Too many requests'}, 429)
+        secret = os.environ.get('PAYSTACK_SECRET_KEY', '').strip()
+        if not secret:
+            return self._json({'ok': False, 'error': 'Paystack not configured'}, 503)
+        try:
+            length = int(self.headers.get('Content-Length') or 0)
+            if length > 2048:
+                return self._json({'ok': False, 'error': 'payload too large'}, 413)
+            payload = json.loads(self.rfile.read(length).decode('utf-8') or '{}')
+        except Exception:
+            return self._json({'ok': False, 'error': 'bad request'}, 400)
+        ref = str(payload.get('reference', '')).strip()
+        if not ref or len(ref) > 200:
+            return self._json({'ok': False, 'error': 'missing reference'}, 400)
+        # verify with paystack
+        url = 'https://api.paystack.co/transaction/verify/' + urllib.request.quote(ref, safe='')
+        req = urllib.request.Request(url, headers={
+            'Authorization': 'Bearer ' + secret,
+            'User-Agent': 'SITE-MATRIX-3D/1.0',
+        })
+        try:
+            with urllib.request.urlopen(req, timeout=20) as r:
+                data = json.loads(r.read().decode('utf-8'))
+        except urllib.error.HTTPError as e:
+            try:
+                err_body = e.read().decode('utf-8', 'ignore')[:400]
+            except Exception:
+                err_body = ''
+            return self._json({'ok': False, 'error': 'paystack http %s' % e.code, 'detail': err_body}, 502)
+        except Exception as e:
+            return self._json({'ok': False, 'error': 'paystack unreachable: %s' % e}, 502)
+        if not data.get('status') or not data.get('data'):
+            return self._json({'ok': False, 'error': 'verification failed', 'detail': data.get('message', '')}, 402)
+        tx = data['data']
+        # Must be successful, Naira, minimum 200000 kobo = ₦2,000
+        amount_kobo = int(tx.get('amount') or 0)
+        if tx.get('status') != 'success' or tx.get('currency') != 'NGN' or amount_kobo < 200000:
+            return self._json({
+                'ok': False,
+                'error': 'payment not completed (status=%s, amount=%s %s)' % (
+                    tx.get('status'), tx.get('currency'), amount_kobo),
+            }, 402)
+        return self._json({
+            'ok': True,
+            'data': {
+                'reference': tx.get('reference'),
+                'amount': amount_kobo / 100,
+                'email': tx.get('customer', {}).get('email') or '',
+                'paidAt': tx.get('paidAt') or tx.get('createdAt'),
+                'channel': tx.get('channel'),
+            },
+        })
 
     def _handle_build(self):
         if not rate_ok(self.client_address[0]):
@@ -330,5 +402,8 @@ if __name__ == '__main__':
     port = int(sys.argv[1]) if len(sys.argv) > 1 else int(os.environ.get('PORT', 8000))
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     key_state = 'SET' if os.environ.get('GROQ_API_KEY') else 'MISSING (local brain only)'
-    print('SITE MATRIX 3D on :%d (no-cache) | GROQ_API_KEY: %s | model: %s' % (port, key_state, GROQ_MODEL))
+    pay_state = 'LIVE' if (os.environ.get('PAYSTACK_PUBLIC_KEY') and os.environ.get('PAYSTACK_SECRET_KEY')) else (
+        'DEMO (no keys)' if not os.environ.get('PAYSTACK_SECRET_KEY') and not os.environ.get('PAYSTACK_PUBLIC_KEY') else 'PARTIAL (needs both keys)')
+    print('SITE MATRIX 3D on :%d (no-cache) | GROQ_API_KEY: %s | model: %s | Paystack: %s'
+          % (port, key_state, GROQ_MODEL, pay_state))
     ThreadingHTTPServer(('0.0.0.0', port), Handler).serve_forever()

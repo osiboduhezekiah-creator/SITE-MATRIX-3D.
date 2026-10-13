@@ -273,11 +273,50 @@ export function setCurrentProjectId(owner, id) {
   catch (e) { /* ignore */ }
 }
 
-/* ---------------- payment modal (demo checkout) ---------------- */
+/* ---------------- payment (Paystack live with demo fallback) ---------------- */
 
 function escapeHtml(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, (c) =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// Fetched once per page load from /api/config (only contains public key)
+let _paystackCfg = null;
+async function getPaystackCfg() {
+  if (_paystackCfg) return _paystackCfg;
+  try {
+    const r = await fetch('/api/config', { cache: 'no-store' });
+    const j = await r.json();
+    _paystackCfg = (j && j.ok && j.paystack) ? j.paystack : { publicKey: '', enabled: false };
+  } catch (e) {
+    _paystackCfg = { publicKey: '', enabled: false };
+  }
+  return _paystackCfg;
+}
+
+// Dynamically load Paystack's inline popup JS (paystack.js). Safe to call multiple times.
+function loadPaystackJs() {
+  if (window.PaystackPop) return Promise.resolve(window.PaystackPop);
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://js.paystack.co/v1/inline.js';
+    s.async = true;
+    s.onload = () => resolve(window.PaystackPop);
+    s.onerror = () => reject(new Error('Paystack script failed to load'));
+    document.head.appendChild(s);
+  });
+}
+
+// Verify a payment reference with our server (server checks Paystack with secret key)
+async function verifyPaystackRef(reference) {
+  const r = await fetch('/api/paystack/verify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ reference }),
+  });
+  const j = await r.json();
+  if (!j.ok) throw new Error(j.error || 'verification failed');
+  return j.data;
 }
 
 export function closePayModal() {
@@ -293,7 +332,7 @@ export function closePayModal() {
  * Open the demo checkout modal.
  * opts: { email, title, subtitle, successLabel, successHref, onSuccess }
  */
-export function openPayModal(opts = {}) {
+export async function openPayModal(opts = {}) {
   closePayModal();
 
   const overlay = document.createElement('div');
@@ -322,16 +361,26 @@ export function openPayModal(opts = {}) {
       '</div>' +
       '<div class="pay-error hidden pay-owner-error"></div>' +
       '<form class="pay-form" novalidate>' +
-        '<label>Card number' +
-          '<input type="text" class="pay-cardnum" inputmode="numeric" placeholder="4242 4242 4242 4242" maxlength="19" autocomplete="cc-number" />' +
-        '</label>' +
-        '<div class="pay-grid2">' +
-          '<label>Expiry<input type="text" class="pay-exp" placeholder="MM/YY" maxlength="5" inputmode="numeric" autocomplete="cc-exp" /></label>' +
-          '<label>CVV<input type="password" class="pay-cvv" placeholder="123" maxlength="4" inputmode="numeric" autocomplete="cc-csc" /></label>' +
+        '<div class="pay-live-fields hidden">' +
+          '<label class="pay-email-label">Email' +
+            '<input type="email" class="pay-live-email" placeholder="you@example.com" autocomplete="email" required />' +
+          '</label>' +
+          '<div class="pay-error hidden"></div>' +
+          '<button type="submit" class="pay-btn">🔒 Pay securely with Paystack — ' + SUB_LABEL + '</button>' +
+          '<p class="pay-secure">🔐 Checkout secured by <b>Paystack</b> • Cards, Bank, USSD, Transfer, Apple/Google Pay.<br/>You will be redirected to Paystack to complete your payment.</p>' +
         '</div>' +
-        '<div class="pay-error hidden"></div>' +
-        '<button type="submit" class="pay-btn">🔒 Subscribe — ' + SUB_LABEL + '</button>' +
-        '<p class="pay-secure">🔐 Secured checkout • <b>Demo mode — no real charge is made.</b><br/>Use any test card, e.g. 4242 4242 4242 4242.<br/>Connect Paystack / Flutterwave to accept live payments. <span style="opacity:.55">(v3)</span></p>' +
+        '<div class="pay-demo-fields">' +
+          '<label>Card number' +
+            '<input type="text" class="pay-cardnum" inputmode="numeric" placeholder="4242 4242 4242 4242" maxlength="19" autocomplete="cc-number" />' +
+          '</label>' +
+          '<div class="pay-grid2">' +
+            '<label>Expiry<input type="text" class="pay-exp" placeholder="MM/YY" maxlength="5" inputmode="numeric" autocomplete="cc-exp" /></label>' +
+            '<label>CVV<input type="password" class="pay-cvv" placeholder="123" maxlength="4" inputmode="numeric" autocomplete="cc-csc" /></label>' +
+          '</div>' +
+          '<div class="pay-error hidden"></div>' +
+          '<button type="submit" class="pay-btn">🔒 Subscribe — ' + SUB_LABEL + '</button>' +
+          '<p class="pay-secure">🔐 Secured checkout • <b>Demo mode — no real charge is made.</b><br/>Use any test card, e.g. 4242 4242 4242 4242.</p>' +
+        '</div>' +
       '</form>' +
       '<div class="pay-success hidden">' +
         '<div class="pay-check">✓</div>' +
@@ -352,33 +401,150 @@ export function openPayModal(opts = {}) {
   if (opts.email) {
     q('.pay-email-row').classList.remove('hidden');
     q('.pay-email').textContent = opts.email;
+    const liveEmail = q('.pay-live-email');
+    if (liveEmail) {
+      liveEmail.value = opts.email;
+      liveEmail.readOnly = true;
+      liveEmail.style.opacity = '0.75';
+    }
   }
 
-  const errBox = q('.pay-error');
-  const showError = (msg) => {
-    errBox.textContent = msg;
-    errBox.classList.remove('hidden');
-  };
-  const hideError = () => errBox.classList.add('hidden');
+  // Determine live vs demo mode once
+  const cfg = await getPaystackCfg();
+  const live = !!(cfg && cfg.enabled && cfg.publicKey);
+  const liveWrap = q('.pay-live-fields');
+  const demoWrap = q('.pay-demo-fields');
+  const form = q('.pay-form');
 
-  // input formatting
-  q('.pay-cardnum').addEventListener('input', (e) => {
+  if (live) {
+    liveWrap.classList.remove('hidden');
+    demoWrap.classList.add('hidden');
+  } else {
+    liveWrap.classList.add('hidden');
+    demoWrap.classList.remove('hidden');
+  }
+
+  const errBox = q('.pay-error') || form.querySelector('.pay-error');
+  const showError = (msg) => {
+    const eb = q('.pay-live-fields .pay-error') || q('.pay-demo-fields .pay-error');
+    eb.textContent = msg;
+    eb.classList.remove('hidden');
+  };
+  const hideError = () => {
+    form.querySelectorAll('.pay-error').forEach((el) => el.classList.add('hidden'));
+  };
+
+  function showSuccess(receiptId, titleOverride) {
+    setActivated();
+    form.classList.add('hidden');
+    q('.pay-owner-row').classList.add('hidden');
+    q('.pay-owner-toggle').classList.add('hidden');
+    q('.pay-success-title').textContent = titleOverride || 'Subscription Active';
+    q('.pay-until').textContent = 'Active until ' + fmtSubDate(getSubscription().endsAt) + ' — renews monthly, cancel anytime.';
+    const s = q('.pay-success');
+    s.classList.remove('hidden');
+    q('.pay-receipt-id').textContent = receiptId;
+    const done = q('.pay-done');
+    done.textContent = opts.successLabel || 'Continue Building →';
+    done.addEventListener('click', () => {
+      if (opts.successHref) window.location.href = opts.successHref;
+      else closePayModal();
+    });
+    if (typeof opts.onSuccess === 'function') {
+      try { opts.onSuccess(); } catch (err) { /* ignore */ }
+    }
+  }
+
+  // --- demo card input formatting ---
+  const cn = q('.pay-cardnum');
+  if (cn) cn.addEventListener('input', (e) => {
     const digits = e.target.value.replace(/\D/g, '').slice(0, 16);
     e.target.value = digits.replace(/(\d{4})(?=\d)/g, '$1 ');
   });
-  q('.pay-exp').addEventListener('input', (e) => {
+  const ep = q('.pay-exp');
+  if (ep) ep.addEventListener('input', (e) => {
     let d = e.target.value.replace(/\D/g, '').slice(0, 4);
     e.target.value = d.length > 2 ? d.slice(0, 2) + '/' + d.slice(2) : d;
   });
-  q('.pay-cvv').addEventListener('input', (e) => {
+  const cv = q('.pay-cvv');
+  if (cv) cv.addEventListener('input', (e) => {
     e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4);
   });
 
-  q('.pay-form').addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (processing) return;
     hideError();
-    const num = q('.pay-cardnum').value.replace(/\D/g, '');
+
+    if (live) {
+      // ---------- LIVE PAYSTACK FLOW ----------
+      const emailInput = q('.pay-live-email');
+      const email = (emailInput.value || '').trim().toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        emailInput.focus();
+        return showError('Please enter a valid email address for your receipt.');
+      }
+      processing = true;
+      const btn = form.querySelector('.pay-btn');
+      btn.disabled = true;
+      btn.classList.add('processing');
+      btn.textContent = 'Opening Paystack…';
+      try {
+        const PaystackPop = await loadPaystackJs();
+        const handler = PaystackPop.setup({
+          key: cfg.publicKey,
+          email,
+          amount: PRICE_NGN * 100, // kobo
+          currency: 'NGN',
+          ref: 'SM3D-' + Date.now().toString(36).toUpperCase() +
+               '-' + Math.floor(100000 + Math.random() * 900000),
+          metadata: {
+            custom_fields: [
+              { display_name: 'Plan', variable_name: 'plan', value: 'SITE MATRIX 3D Full Access Monthly' },
+              { display_name: 'App', variable_name: 'app', value: 'SITE MATRIX 3D' },
+            ],
+          },
+          callback: async (resp) => {
+            try {
+              btn.textContent = 'Verifying payment…';
+              const data = await verifyPaystackRef(resp.reference);
+              showSuccess('PSK-' + (data.reference || resp.reference));
+            } catch (vErr) {
+              processing = false;
+              btn.disabled = false;
+              btn.classList.remove('processing');
+              btn.textContent = '🔒 Pay securely with Paystack — ' + SUB_LABEL;
+              showError('Payment could not be verified: ' + (vErr.message || 'try again'));
+            }
+          },
+          onClose: () => {
+            processing = false;
+            btn.disabled = false;
+            btn.classList.remove('processing');
+            btn.textContent = '🔒 Pay securely with Paystack — ' + SUB_LABEL;
+          },
+        });
+        handler.openIframe();
+        // Re-enable the button a moment after popup opens so users can try again if they close it
+        setTimeout(() => {
+          if (processing) {
+            btn.disabled = false;
+            btn.classList.remove('processing');
+            btn.textContent = '🔒 Pay securely with Paystack — ' + SUB_LABEL;
+          }
+        }, 3500);
+      } catch (err) {
+        processing = false;
+        btn.disabled = false;
+        btn.classList.remove('processing');
+        btn.textContent = '🔒 Pay securely with Paystack — ' + SUB_LABEL;
+        showError('Could not load Paystack: ' + (err.message || 'check your connection'));
+      }
+      return;
+    }
+
+    // ---------- DEMO FLOW (no keys configured) ----------
+    const num = (q('.pay-cardnum').value || '').replace(/\D/g, '');
     const exp = q('.pay-exp').value;
     const cvv = q('.pay-cvv').value;
     if (num.length !== 16) return showError('Please enter a valid 16-digit card number.');
@@ -386,31 +552,13 @@ export function openPayModal(opts = {}) {
     if (!m) return showError('Please enter the card expiry as MM/YY.');
     if (cvv.length < 3) return showError('Please enter the 3-digit CVV.');
     processing = true;
-    const btn = q('.pay-form .pay-btn');
+    const btn = form.querySelector('.pay-btn');
     btn.disabled = true;
     btn.classList.add('processing');
     btn.textContent = 'Processing payment…';
     setTimeout(() => {
-      setActivated();
-      q('.pay-form').classList.add('hidden');
-      q('.pay-owner-row').classList.add('hidden');
-      q('.pay-owner-toggle').classList.add('hidden');
-      q('.pay-success-title').textContent = 'Subscription Active';
-      q('.pay-until').textContent = 'Active until ' + fmtSubDate(getSubscription().endsAt) + ' — renews monthly, cancel anytime.';
-      const s = q('.pay-success');
-      s.classList.remove('hidden');
-      q('.pay-receipt-id').textContent =
-        'SM3D-' + Date.now().toString(36).toUpperCase() + '-' + Math.floor(1000 + Math.random() * 9000);
-      const done = q('.pay-done');
-      done.textContent = opts.successLabel || 'Continue Building →';
-      done.addEventListener('click', () => {
-        if (opts.successHref) window.location.href = opts.successHref;
-        else closePayModal();
-      });
-      if (typeof opts.onSuccess === 'function') {
-        try { opts.onSuccess(); } catch (err) { /* ignore */ }
-      }
-    }, 1800);
+      showSuccess('SM3D-' + Date.now().toString(36).toUpperCase() + '-' + Math.floor(1000 + Math.random() * 9000));
+    }, 1500);
   });
 
   // owner master-code unlock (for the site owner — no card needed)
